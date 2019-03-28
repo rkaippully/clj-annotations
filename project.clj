@@ -1,4 +1,4 @@
-(defproject clj-meta "0.0.0"
+(defproject clj-meta "0.1.0"
   :description "A Clojure library designed to annotate values with arbitrary metadata."
   :url "https://github.com/rkaippully/clj-meta"
   :license {:name "Mozilla Public License v2.0"
