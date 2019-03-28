@@ -17,4 +17,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Something has been removed.
 
 
-[Unreleased]: https://github.com/rkaippully/clj-meta/compare/0.0.0...HEAD
+[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.0.0...HEAD

@@ -1,12 +1,12 @@
-# clj-meta
-[![Build Status](https://travis-ci.org/rkaippully/clj-meta.svg?branch=master)](https://travis-ci.org/rkaippully/clj-meta)
-[![codecov](https://codecov.io/gh/rkaippully/clj-meta/branch/master/graph/badge.svg)](https://codecov.io/gh/rkaippully/clj-meta)
-[![Clojars Project](https://img.shields.io/clojars/v/clj-meta.svg)](https://clojars.org/clj-meta)
+# clj-annotations
+[![Build Status](https://travis-ci.org/rkaippully/clj-annotations.svg?branch=master)](https://travis-ci.org/rkaippully/clj-annotations)
+[![codecov](https://codecov.io/gh/rkaippully/clj-annotations/branch/master/graph/badge.svg)](https://codecov.io/gh/rkaippully/clj-annotations)
+[![Clojars Project](https://img.shields.io/clojars/v/clj-annotations.svg)](https://clojars.org/clj-annotations)
 
-A Clojure library designed to annotate values with arbitrary metadata.
+A Clojure library designed to annotate values with arbitrary properties.
 
 ```clj
-[clj-meta "0.1.0"]
+[com.github.rkaippully/clj-annotations "0.0.0"]
 ```
 
 ## Usage
