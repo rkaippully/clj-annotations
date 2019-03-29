@@ -1,6 +1,6 @@
-(ns com.github.rkaippully.clj-annotations.core-test
+(ns clj-annotations.core-test
   (:require [clojure.test :refer :all]
-            [com.github.rkaippully.clj-annotations.core :refer :all]))
+            [clj-annotations.core :refer :all]))
 
 
 (deftest a-test

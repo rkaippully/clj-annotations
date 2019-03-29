@@ -1,4 +1,4 @@
-(ns com.github.rkaippully.clj-annotations.core
+(ns clj-annotations.core
   "Access and manipulate annotations.
 
   Annotations are arbitrary properties associated with values that can be used for a variety
