@@ -6,39 +6,51 @@
   result map will be empty if the conditiong is satisfied (indicating success). Otherwise, it will
   have at least one of the keys `:warnings` and `:errors`. These keys will map to a sequence
   of warning and error message strings respectively."
+  (:refer-clojure :exclude [and or])
   (:import
    [java.net URL MalformedURLException]))
 
-(defmacro and
+(defn and
   "Evaluates conditions one at a time, from left to right. If a condition returns an
-  error result, `and` returns that value and doesn't evaluate any of the other expressions,
-  otherwise it returns the value of the last expr."
-  ([x] x)
-  ([x & next]
-   `(let [and# ~x]
-      (cond
-        (contains? and# :errors)   and#
-        (contains? and# :warnings) (merge-with concat and# (and ~@next))
-        :else                      (and ~@next)))))
+  error or warning result, `and` returns that value and doesn't evaluate any of the
+  other conditions, otherwise it returns the result of the last condition."
+  [cnd & cnds]
+  (fn this
+    ([v]
+     (this v {}))
+    ([v ctx]
+     (letfn [(f [res c]
+               (cond
+                 (clojure.core/or (contains? res :errors)
+                   (contains? res :warnings)) res
+                 :else                        (c v ctx)))]
+       (reduce f (cnd v ctx) cnds)))))
 
-(defmacro or
+(defn or
   "Evaluates conditions one at a time, from left to right. If a condition returns a
-  success value, `or` returns that value and doesn't evaluate any of the other expressions, otherwise it
-  returns the value of the last expression."
-  ([x] x)
-  ([x & next]
-   `(let [or# ~x]
-      (if (contains? or# :success) or# (or ~@next)))))
+  success value, `or` returns that value and doesn't evaluate any of the other
+  conditions, otherwise it returns the value of the last condition"
+  [cnd & cnds]
+  (fn this
+    ([v]
+     (this v {}))
+    ([v ctx]
+     (letfn [(f [res c]
+               (cond
+                 (clojure.core/or (contains? res :errors)
+                   (contains? res :warnings)) (c v ctx)
+                 :else                        res))]
+       (reduce f (cnd v ctx) cnds)))))
 
 (defn seq-length
   [{:keys [lt le gt ge eq ne]} l name]
   (cond
-    (and (some? lt) (>= l lt))   {:error (str name " should be less than " lt)}
-    (and (some? le) (> l le))    {:error (str name " should be less than or equal to " le)}
-    (and (some? gt) (<= l gt))   {:error (str name " should be greater than " gt)}
-    (and (some? ge) (< l ge))    {:error (str name " should be greater than or equal to " ge)}
-    (and (some? eq) (not= l eq)) {:error (str name " should be equal to " eq)}
-    (and (some? ne) (= l ne))    {:error (str name " should not be equal to " ne)}
+    (and (some? lt) (>= l lt))   {:errors [(str name " should be less than " lt)]}
+    (and (some? le) (> l le))    {:errors [(str name " should be less than or equal to " le)]}
+    (and (some? gt) (<= l gt))   {:errors [(str name " should be greater than " gt)]}
+    (and (some? ge) (< l ge))    {:errors [(str name " should be greater than or equal to " ge)]}
+    (and (some? eq) (not= l eq)) {:errors [(str name " should be equal to " eq)]}
+    (and (some? ne) (= l ne))    {:errors [(str name " should not be equal to " ne)]}
     :else                        {}))
 
 (defn string-length
@@ -57,7 +69,7 @@
   (let [vs (set (map #(get % k) ms))]
     (if (= (count ms) (count vs))
       {}
-      {:error (str "Duplicate values for the attribute " k)})))
+      {:errors [(str "Duplicate values for the attribute " k)]})))
 
 (defn valid-url?
   [s]
