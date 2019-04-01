@@ -7,6 +7,8 @@
   have at least one of the keys `:warnings` and `:errors`. These keys will map to a sequence
   of warning and error message strings respectively."
   (:refer-clojure :exclude [and or])
+  (:require
+   [clojure.core :as clj])
   (:import
    [java.net URL MalformedURLException]))
 
@@ -21,7 +23,7 @@
     ([v ctx]
      (letfn [(f [res c]
                (cond
-                 (clojure.core/or (contains? res :errors)
+                 (clj/or (contains? res :errors)
                    (contains? res :warnings)) res
                  :else                        (c v ctx)))]
        (reduce f (cnd v ctx) cnds)))))
@@ -37,7 +39,7 @@
     ([v ctx]
      (letfn [(f [res c]
                (cond
-                 (clojure.core/or (contains? res :errors)
+                 (clj/or (contains? res :errors)
                    (contains? res :warnings)) (c v ctx)
                  :else                        res))]
        (reduce f (cnd v ctx) cnds)))))
@@ -45,34 +47,35 @@
 (defn seq-length
   [{:keys [lt le gt ge eq ne]} l name]
   (cond
-    (and (some? lt) (>= l lt))   {:errors [(str name " should be less than " lt)]}
-    (and (some? le) (> l le))    {:errors [(str name " should be less than or equal to " le)]}
-    (and (some? gt) (<= l gt))   {:errors [(str name " should be greater than " gt)]}
-    (and (some? ge) (< l ge))    {:errors [(str name " should be greater than or equal to " ge)]}
-    (and (some? eq) (not= l eq)) {:errors [(str name " should be equal to " eq)]}
-    (and (some? ne) (= l ne))    {:errors [(str name " should not be equal to " ne)]}
-    :else                        {}))
+    (clj/and (some? lt) (>= l lt))   {:errors [(str name " should be less than " lt)]}
+    (clj/and (some? le) (> l le))    {:errors [(str name " should be less than or equal to " le)]}
+    (clj/and (some? gt) (<= l gt))   {:errors [(str name " should be greater than " gt)]}
+    (clj/and (some? ge) (< l ge))    {:errors [(str name " should be greater than or equal to " ge)]}
+    (clj/and (some? ne) (= l ne))    {:errors [(str name " should not be equal to " ne)]}
+    (clj/and (some? eq) (not= l eq)) {:errors [(str name " should be equal to " eq)]}
+    :else                            {}))
 
 (defn string-length
   ""
-  [opts ^String s]
-  (seq-length opts (.length s) "String length"))
+  [opts ^String s _]
+  (seq-length opts (if s (.length s) 0) "String length"))
 
 (defn array-length
-  [opts xs]
+  [opts xs _]
   (seq-length opts (count xs) "Array length"))
 
 (defn unique-attribute?
   "Takes a sequence of maps and ensure that the value of attribute `k' is unique across
   all the maps."
-  [k ms]
-  (let [vs (set (map #(get % k) ms))]
-    (if (= (count ms) (count vs))
+  [k ms _]
+  (let [g (->> (group-by #(get % k) ms)
+               (map #(count (second %))))]
+    (if (every? #(= % 1) g)
       {}
       {:errors [(str "Duplicate values for the attribute " k)]})))
 
 (defn valid-url?
-  [s]
+  [s _]
   (try
     (URL. s)
     {}
@@ -80,8 +83,7 @@
       {:errors ["Malformed URL"]})))
 
 (defn regex-match?
-  [re s]
-  (if (re-matches re s)
+  [re s _]
+  (if (clj/and re s (re-matches re s))
     {}
     {:errors [(str "Value must match the regular expression: " re)]}))
-

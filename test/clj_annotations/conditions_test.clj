@@ -183,3 +183,73 @@
 
     (testing "or - eee"
       (is (= {:errors ["error3"]} ((c/or (cond-error 1) (cond-error 2) (cond-error 3)) (Object.)))))))
+
+(deftest string-length-test
+  (testing "nil string"
+    (is (= {:errors ["String length should be greater than 0"]} (c/string-length {:gt 0} nil nil))))
+  (testing "empty string"
+    (is (= {:errors ["String length should be greater than 0"]} (c/string-length {:gt 0} "" nil))))
+  (testing "lt"
+    (is (= {:errors ["String length should be less than 3"]} (c/string-length {:lt 3} "abc" nil))))
+  (testing "le"
+    (is (= {:errors ["String length should be less than or equal to 3"]} (c/string-length {:le 3} "abcd" nil))))
+  (testing "gt"
+    (is (= {:errors ["String length should be greater than 3"]} (c/string-length {:gt 3} "abc" nil))))
+  (testing "ge"
+    (is (= {:errors ["String length should be greater than or equal to 3"]} (c/string-length {:ge 3} "ab" nil))))
+  (testing "eq"
+    (is (= {:errors ["String length should be equal to 3"]} (c/string-length {:eq 3} "ab" nil))))
+  (testing "ne"
+    (is (= {:errors ["String length should not be equal to 3"]} (c/string-length {:ne 3} "abc" nil))))
+  (testing "success"
+    (is (= {} (c/string-length {:ne 3} "ab" nil)))))
+
+(deftest array-length-test
+  (testing "nil array"
+    (is (= {:errors ["Array length should be greater than 0"]} (c/array-length {:gt 0} nil nil))))
+  (testing "empty array"
+    (is (= {:errors ["Array length should be greater than 0"]} (c/array-length {:gt 0} [] nil))))
+  (testing "lt"
+    (is (= {:errors ["Array length should be less than 3"]} (c/array-length {:lt 3} [1 2 3] nil))))
+  (testing "le"
+    (is (= {:errors ["Array length should be less than or equal to 3"]} (c/array-length {:le 3} [1 2 3 4] nil))))
+  (testing "gt"
+    (is (= {:errors ["Array length should be greater than 3"]} (c/array-length {:gt 3} [1 2 3] nil))))
+  (testing "ge"
+    (is (= {:errors ["Array length should be greater than or equal to 3"]} (c/array-length {:ge 3} [1 2] nil))))
+  (testing "eq"
+    (is (= {:errors ["Array length should be equal to 3"]} (c/array-length {:eq 3} [1 2] nil))))
+  (testing "ne"
+    (is (= {:errors ["Array length should not be equal to 3"]} (c/array-length {:ne 3} [1 2 3] nil))))
+  (testing "success"
+    (is (= {} (c/array-length {:ne 3} [1 2] nil)))))
+
+(deftest unique-attribute-test
+  (testing "nil sequence"
+    (is (= {} (c/unique-attribute? :a nil nil))))
+  (testing "empty sequence"
+    (is (= {} (c/unique-attribute? :a [{}] nil))))
+  (testing "single element sequence"
+    (is (= {} (c/unique-attribute? :a [{:a 2}] nil))))
+  (testing "no duplicates"
+    (is (= {} (c/unique-attribute? :a [{:a 2 :b 3} {:a 4 :b 3} {:a 5 :c 2}] nil))))
+  (testing "with duplicates"
+    (is (= {:errors ["Duplicate values for the attribute :a"]} (c/unique-attribute? :a [{:a 2 :b 3} {:a 4 :b 3} {:a 2 :c 2}] nil)))))
+
+(deftest valid-url-test
+  (testing "nil url"
+    (is (= {:errors ["Malformed URL"]} (c/valid-url? nil nil))))
+  (testing "bad url"
+    (is (= {:errors ["Malformed URL"]} (c/valid-url? "blah" nil))))
+  (testing "good url"
+    (is (= {} (c/valid-url? "https://www.google.com" nil)))))
+
+(deftest regex-match-test
+  (testing "nil regex"
+    (is (= {:errors ["Value must match the regular expression: "]} (c/regex-match? nil "abc" nil))))
+  (testing "nil string"
+    (is (= {:errors ["Value must match the regular expression: \\d{4}-\\d{2}-\\d{2}"]} (c/regex-match? #"\d{4}-\d{2}-\d{2}" nil nil))))
+  (testing "match success"
+    (is (= {} (c/regex-match? #"\d{4}-\d{2}-\d{2}" "4444-22-22" nil))))
+  (testing "match fail"
+    (is (= {:errors ["Value must match the regular expression: \\d{4}-\\d{2}-\\d{2}"]} (c/regex-match? #"\d{4}-\d{2}-\d{2}" "44442222" nil)))))
