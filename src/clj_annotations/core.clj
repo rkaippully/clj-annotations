@@ -49,10 +49,13 @@
 
 (defn make-schema
   [{:keys [include attributes] :as m}]
-  (let [attrs (merge-attrs (:attributes include) attributes)]
-    (-> (merge include m)
-        (dissoc :include)
-        (assoc :attributes attrs)
+  (let [attrs        (cond
+                       (nil? include)        [attributes]
+                       (sequential? include) (conj (vec (map :attributes include)) attributes)
+                       :else                 [(:attributes include) attributes])
+        merged-attrs (reduce merge-attrs attrs)]
+    (-> (dissoc m :include)
+        (assoc :attributes merged-attrs)
         (with-meta {:type ::schema}))))
 
 (defmacro defschema
@@ -60,8 +63,12 @@
 
   `kvs` are key-value pairs. The following keys are defined:
 
-  `:include`:     Include the kvs from another schema to this schema. If a key occurs in
-                  both the schemas, the one in this schema wins.
+  `:include`:     Specifies another schema or a collection of schemas to be merged in to
+                  this schema. `:include s1` will merge all properties of s1 in to this
+                  schema, properties specified in this schema wins in case of
+                  conflicts. Similarly, `:include [s1 s2]` will merge all properties from
+                  s1 and s2 in to this schema. Properties of `s1`, `s2`, and this schema
+                  will win in that order in case of conflicts.
   `:name`:        A short name for this schema used for documentation purposes.
   `:description`: A description for this schema used for documentation purposes.
   `:attributes`:  A map from attribute IDs to attribute annotations."

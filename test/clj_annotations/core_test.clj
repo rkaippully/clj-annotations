@@ -43,6 +43,18 @@
                                      :attributes {:id {:type :string}}})]
       (is (= :string (sut/get-annotations employee :id :type)))))
 
+  (testing "include multiple schemas"
+    (let [null-id  (sut/make-schema {:attributes {:id {:nullable true}}})
+          employee (sut/make-schema {:include    [user null-id]
+                                     :attributes {:id {:type :string}}})]
+      (is (= employee {:attributes
+                       {:id
+                        {:type     :string
+                         :nullable true}
+                        :name
+                        {:type     :string
+                         :validity :non-empty}}}))))
+
   (testing "make-schema removes :include"
     (let [employee (sut/make-schema {:include    user
                                      :attributes {:id {:type :string}}})]
