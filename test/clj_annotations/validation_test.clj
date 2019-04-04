@@ -6,7 +6,7 @@
 (defn non-empty-string?
   [s _]
   (cond
-    (= s "")                  {:errors ["Value is blank"]}
+    (= s "")                  {:errors ["Value is empty"]}
     (clojure.string/blank? s) {:warnings ["Value is blank"]}))
 
 (defschema website
@@ -134,9 +134,9 @@
                                            :wins      nil}))))
 
   (testing "unknown attribute type"
-    (is (= {:path    "/unicorn"
-            :level   :error
-            :message "Unknown attribute type: :magic"}
+    (is (= [{:path    "/unicorn"
+              :level   :error
+              :message "Unknown attribute type: :magic"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true

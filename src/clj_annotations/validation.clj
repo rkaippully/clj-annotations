@@ -67,8 +67,8 @@
         ctx {:path path}]
     (if-let [res (and validity-fn (validity-fn obj ctx))]
       (concat
-        (map #(make-result path :error %) (:errors res))
-        (map #(make-result path :warning %) (:warnings res)))
+        (mapcat #(make-result path :error %) (:errors res))
+        (mapcat #(make-result path :warning %) (:warnings res)))
       [])))
 
 (declare validate-object)
