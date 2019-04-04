@@ -7,14 +7,16 @@
   :plugins [[lein-cloverage "1.0.13"]
             [lein-shell "0.5.0"]
             [lein-ancient "0.6.15"]
-            [lein-changelog "0.3.2"]]
-  :profiles {:dev [:clj10]
+            [lein-changelog "0.3.2"]
+            [lein-kibit "0.1.6"]]
+  :profiles {:dev   [:clj10]
              :clj08 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :clj09 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :clj10 {:dependencies [[org.clojure/clojure "1.10.0"]]}}
   :deploy-repositories [["releases" :clojars]]
   :aliases {"update-readme-version" ["shell" "sed" "-i" "s/\\\\[clj-annotations \"[0-9.]*\"\\\\]/[clj-annotations \"${:version}\"]/" "README.md"]}
-  :release-tasks [["vcs" "assert-committed"]
+  :release-tasks [["kibit"]
+                  ["vcs" "assert-committed"]
                   ["shell" "git" "diff" "--exit-code"]
                   ["change" "version" "leiningen.release/bump-version"]
                   ["change" "version" "leiningen.release/bump-version" "release"]

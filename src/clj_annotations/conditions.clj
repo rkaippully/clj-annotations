@@ -79,8 +79,7 @@
   "Condition that takes a sequence of maps `ms` and ensure that the value of attribute `k`
   is unique across all the maps."
   [k ms _]
-  (let [g (->> (group-by #(get % k) ms)
-               (map #(count (second %))))]
+  (let [g (map #(count (second %)) (group-by #(get % k) ms))]
     (if (every? #(= % 1) g)
       {}
       {:errors [(str "Duplicate values for the attribute " k)]})))
