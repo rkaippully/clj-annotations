@@ -10,6 +10,8 @@
    [java.util Date UUID]))
 
 (defn type-name
+  "Returns the simple name of the class of `x`. For e.g., (type-name true) will return
+  \"boolean\"."
   [x]
   (str/lower-case (.getSimpleName (class x))))
 
@@ -31,6 +33,8 @@
       nil)))
 
 (def standard-type-checks
+  "A standard set of type validations used by `validate-object`. This includes validation
+  for `:string`, `:boolean`, `:number`, `:date`, `:uuid`, `:url`, and `:bag` types."
   {:string  #(when-not (instance? String %2)
                (str "Expected a string but found " (type-name %2)))
    :boolean #(when-not (instance? Boolean %2)
@@ -51,17 +55,19 @@
                (str "Expected a map but found " (type-name %2)))})
 
 (defn make-validation-result
+  "Returns a standard validation result"
   [path level msg]
   [{:path    (reduce #(str %1 "/" %2) "" path)
     :level   level
     :message msg}])
 
 (def standard-opts
-  {:type-checks                 standard-type-checks
-   :make-result                 make-validation-result
+  "Standard options passed to `validate-object` if not overridden."
+  {:type-checks                     standard-type-checks
+   :make-result                     make-validation-result
    :fail-on-unsupported-attributes? true})
 
-(defn eval-validity-condition
+(defn- eval-validity-condition
   [path schema obj {:keys [make-result]}]
   (let [validity-fn (:validity schema)
         ctx {:path path}]
@@ -73,7 +79,7 @@
 
 (declare validate-object)
 
-(defn validate-scalar-attribute
+(defn- validate-scalar-attribute
   [path schema obj {:keys [type-checks make-result] :as opts}]
   (let [typ               (:type schema)
         canon-vals        (:canonical-values schema)
@@ -89,7 +95,7 @@
       (and canon-vals (not-any? (set canon-vals) [obj])) (make-result path :error (str "Must be one of: " (str/join ", " canon-vals)))
       :else                                              (eval-validity-condition path schema obj opts))))
 
-(defn validate-vector-attribute
+(defn- validate-vector-attribute
   [path schema obj {:keys [make-result] :as opts}]
   (if (sequential? obj)
     (letfn [(validate [i v]
@@ -97,7 +103,7 @@
      (apply concat (map-indexed validate obj)))
     (make-result path :error "Expected an array value but found a scalar")))
 
-(defn validate-attribute
+(defn- validate-attribute
   [path
    {:keys [required multi-valued] :or {required false multi-valued false} :as schema}
    obj
@@ -112,7 +118,20 @@
 (defn validate-object
   "Validate an object given its schema. Returns a sequence of as produced by the
   `make-result` function. Returns an empty sequence if there are no validation
-  errors/warnings."
+  errors/warnings.
+
+  `path`   - a vector of the path elements to be used in error messages. Use [] at top
+  level.
+  `schema` - the schema to validate against.
+  `obj`    - the object to validate
+  `opts`   - options for validation, this should be a map with the following keys
+
+  `:make-result` - a function that takes the path, message level, and a message and
+  returns a validation result as a vector. See `make-validation-result` for an example.
+  `:type-checks` - a map from type names to functions validating the conformance of a
+  value to those types. See `standard-type-checks` for an example.
+  `:fail-on-unsupported-attributes?` - if true an error will be reported if the `obj`
+  contains an attribute that is not defined in `schema`."
   ([schema obj]
    (validate-object schema obj standard-opts))
   ([schema obj opts]

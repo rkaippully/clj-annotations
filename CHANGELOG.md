@@ -8,13 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- _CHANGELOG.md_ created.
-### Changed
-- Something has been changed.
-### Fixed
-- Something has been fixed.
-### Removed
-- Something has been removed.
+- Mechanisms to define a schema via `defschema`
+- Functions to access schema attributes and properties
+- Mechanisms to define conditions and use them in validations
 
 
 [Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.0.0...HEAD
