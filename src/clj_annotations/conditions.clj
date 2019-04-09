@@ -13,27 +13,31 @@
    [java.net URL MalformedURLException]))
 
 (defn and
-  "Evaluates conditions one at a time, from left to right. If a condition returns an
-  error or warning result, `and` returns that value and doesn't evaluate any of the
-  other conditions, otherwise it returns the result of the last condition."
+  "Forms a compound condition that evaluates the given conditions one at a time, from left
+  to right. If a condition returns an error or warning result, `and` returns that value
+  and doesn't evaluate any of the other conditions, otherwise it returns the result of the
+  last condition."
   [cnd & cnds]
   (fn [v ctx]
     (letfn [(f [res c]
               (cond
-                (clj/or (contains? res :errors)
+                (clj/or
+                  (contains? res :errors)
                   (contains? res :warnings)) res
                 :else                        (c v ctx)))]
       (reduce f (cnd v ctx) cnds))))
 
 (defn or
-  "Evaluates conditions one at a time, from left to right. If a condition returns a
-  success value, `or` returns that value and doesn't evaluate any of the other
-  conditions, otherwise it returns the value of the last condition"
+  "Forms a compound condition that evaluates conditions one at a time, from left to
+  right. If a condition returns a success value, `or` returns that value and doesn't
+  evaluate any of the other conditions, otherwise it returns the value of the last
+  condition"
   [cnd & cnds]
   (fn [v ctx]
     (letfn [(f [res c]
               (cond
-                (clj/or (contains? res :errors)
+                (clj/or
+                  (contains? res :errors)
                   (contains? res :warnings)) (c v ctx)
                 :else                        res))]
       (reduce f (cnd v ctx) cnds))))
@@ -50,8 +54,8 @@
     :else                            {}))
 
 (defn string-length
-  "Condition to check if length of string `s` matches certain criteria. `opts` is a map
-  specifying the match criteria and can have the following keys:
+  "`(string-length opts)` returns a condition to check if length of a string matches certain
+  criteria. `opts` is a map specifying the match criteria and can have the following keys:
 
   :lt - string length must be less than the value of this key
   :le - string length must be less than or equal to the value of this key
@@ -59,12 +63,14 @@
   :ge - string length must be greater than or equal to the value of this key
   :eq - string length must be equal to the value of this key
   :ne - string length must not be equal to the value of this key"
-  [opts ^String s _]
-  (seq-length opts (if s (.length s) 0) "String length"))
+  [opts]
+  (fn [s _]
+    (seq-length opts (if s (.length s) 0) "String length")))
 
 (defn coll-length
-  "Condition to check if length of the collection `xs` matches certain criteria. `opts` is a
-  map specifying the match criteria and can have the following keys:
+  "`(coll-length opts)` returns a condition to check if length of a collection matches
+  certain criteria. `opts` is a map specifying the match criteria and can have the
+  following keys:
 
   :lt - collection length must be less than the value of this key
   :le - collection length must be less than or equal to the value of this key
@@ -72,21 +78,25 @@
   :ge - collection length must be greater than or equal to the value of this key
   :eq - collection length must be equal to the value of this key
   :ne - collection length must not be equal to the value of this key"
-  [opts xs _]
-  (seq-length opts (count xs) "Collection length"))
+  [opts]
+  (fn [xs _]
+    (seq-length opts (count xs) "Collection length")))
 
 (defn unique-attribute?
-  "Condition that takes a sequence of maps `ms` and ensure that the value of attribute `k`
-  is unique across all the maps."
-  [k ms _]
-  (let [g (map #(count (second %)) (group-by #(get % k) ms))]
-    (if (every? #(= % 1) g)
-      {}
-      {:errors [(str "Duplicate values for the attribute " k)]})))
+  "`(unique-attribute k)` returns a condition that takes a sequence of maps `ms` and ensure
+  that the value of attribute `k` is unique across all the maps."
+  [k]
+  (fn [ms _]
+    (let [g (map #(count (second %)) (group-by #(get % k) ms))]
+      (if (every? #(= % 1) g)
+        {}
+        {:errors [(str "Duplicate values for the attribute " k)]}))))
 
 (defn regex-match?
-  "Condition that checks that string `s` matches the regular expression `re`"
-  [re s _]
-  (if (clj/and re s (re-matches re s))
-    {}
-    {:errors [(str "Value must match the regular expression: " re)]}))
+  "`(regex-match re)` returns a condition that takes a string `s` as input and checks if
+  it matches the regular expression `re`"
+  [re]
+  (fn [s _]
+    (if (clj/and re s (re-matches re s))
+      {}
+      {:errors [(str "Value must match the regular expression: " re)]})))
