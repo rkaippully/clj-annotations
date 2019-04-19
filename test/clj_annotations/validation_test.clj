@@ -59,6 +59,7 @@
   (testing "non-map for object"
     (is (= [{:path    ""
              :level   :error
+             :kind    :non-map-value
              :message "Expected a map but found long"}] (sut/validate-object player 42))))
 
   (testing "array for multivalued attribute"
@@ -70,6 +71,7 @@
   (testing "non-array for vector"
     (is (= [{:path    "/websites"
              :level   :error
+             :kind    :non-array-value
              :message "Expected an array value but found a scalar"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
@@ -89,25 +91,32 @@
   (testing "primitive type mismatch"
     (is (= #{{:path    "/id"
               :level   :error
-              :message "Expected a UUID but found long"}
+              :kind    :type-mismatch
+              :message "Malformed UUID"}
              {:path    "/name"
               :level   :error
+              :kind    :type-mismatch
               :message "Expected a string but found long"}
              {:path    "/verified?"
               :level   :error
+              :kind    :type-mismatch
               :message "Expected a boolean but found long"}
              {:path    "/wins"
               :level   :error
+              :kind    :type-mismatch
               :message "Expected a number but found string"}
              {:path    "/date-verified"
               :level   :error
+              :kind    :type-mismatch
               :message "Expected a date but found long"}
              {:path    "/misc"
               :level   :error
+              :kind    :type-mismatch
               :message "Expected a map but found long"}
              {:path    "/websites/0/location"
               :level   :error
-              :message "Expected a URL but found long"}}
+              :kind    :type-mismatch
+              :message "Malformed URL"}}
           (set (sut/validate-object player {:id            42
                                             :name          42
                                             :verified?     42
@@ -119,12 +128,15 @@
   (testing "required attributes"
     (is (= [{:path    "/name"
              :level   :error
+             :kind    :missing-required-attribute
              :message "Missing required attribute"}
             {:path    "/verified?"
              :level   :error
+             :kind    :missing-required-attribute
              :message "Missing required attribute"}
             {:path    "/id"
              :level   :error
+             :kind    :missing-required-attribute
              :message "Missing required attribute"}] (sut/validate-object player {}))))
 
   (testing "nil value for not required attribute"
@@ -135,8 +147,9 @@
 
   (testing "unknown attribute type"
     (is (= [{:path    "/unicorn"
-              :level   :error
-              :message "Unknown attribute type: :magic"}]
+             :level   :error
+             :kind    :unknown-attribute-type
+             :message "Unknown attribute type: :magic"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true
@@ -144,7 +157,7 @@
 
 (deftest unsupported-attributes-test
   (testing "unsupported attributes"
-    (is (= [{:path "/blah" :level :error :message "Unsupported attribute"}]
+    (is (= [{:path "/blah" :level :error :kind :unsupported-attribute :message "Unsupported attribute"}]
           (sut/validate-object player {:id        1
                                        :name      "Raghu"
                                        :verified? true
@@ -159,13 +172,13 @@
 
 (deftest format-errors-test
   (testing "invalid UUID format"
-    (is (= [{:path "/id" :level :error :message "Malformed UUID"}]
+    (is (= [{:path "/id" :level :error :kind :type-mismatch :message "Malformed UUID"}]
           (sut/validate-object player {:id        "c2a5080c-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true}))))
 
   (testing "invalid URL format"
-    (is (= [{:path "/websites/0/location" :level :error :message "Malformed URL"}]
+    (is (= [{:path "/websites/0/location" :level :error :kind :type-mismatch :message "Malformed URL"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true
@@ -173,20 +186,23 @@
 
 (deftest validation-tests
   (testing "warning messages"
-    (is (= [{:path "/name" :level :warning :message "Value is blank"}]
+    (is (= [{:path "/name" :level :warning :kind :validation-failure :message "Value is blank"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "   "
                                        :verified? true}))))
 
   (testing "error messages"
-    (is (= [{:path "/name" :level :error :message "Value is empty"}]
+    (is (= [{:path "/name" :level :error :kind :validation-failure :message "Value is empty"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      ""
                                        :verified? true}))))
 
   (testing "canonical values error"
-    (is (= [{:path "/level" :level :error :message "Must be one of: rookie, intermediate, master"}]
+    (is (= [{:path "/level" :level :error :kind :canonical-value-mismatch :message "Must be one of: rookie, intermediate, master"}]
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true
-                                       :level     "novice"})))))
+                                       :level     "novice"}))))
+
+  (testing "call make-result with invalid kind"
+    (is (= [] (sut/make-validation-result nil nil nil :blah nil)))))

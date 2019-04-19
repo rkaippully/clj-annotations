@@ -72,12 +72,12 @@ an attribute, value of a specific property with an optional "not found" override
 
 ``` clj
 user=> (ann/get-annotations person)
-{:id {:type :integer, :required true, :label "Identifier"}, :email {:type :string, :required true, :label "Email Address", :validity #object[user$non_blank 0x4f3eb635 "user$non_blank@4f3eb635"]}}
+{:id {:type :number, :required true, :label "Identifier"}, :email {:type :string, :required true, :label "Email Address", :validity #object[user$non_blank 0x457d169a "user$non_blank@457d169a"]}}
 user=> (ann/get-annotations person :id)
-{:type :integer, :required true, :label "Identifier"}
+{:type :number, :required true, :label "Identifier"}
 user=> (ann/get-annotations person :id :label)
 "Identifier"
-user=>  (ann/get-annotations person :id :nullable?)
+user=> (ann/get-annotations person :id :nullable?)
 nil
 user=> (ann/get-annotations person :id :nullable? :not-found)
 :not-found
@@ -132,10 +132,10 @@ get started with an example:
 (require ['clj-annotations.validation :as 'v])
 
 user=> (v/validate-object employee {})
-({:path "/email", :level :error, :message "Missing required attribute"} {:path "/employeeId", :level :error, :message "Missing required attribute"} {:path "/id", :level :error, :message "Missing required attribute"})
+({:kind :missing-required-attribute, :message "Missing required attribute", :path "/email", :level :error} {:kind :missing-required-attribute, :message "Missing required attribute", :path "/employeeId", :level :error} {:kind :missing-required-attribute, :message "Missing required attribute", :path "/id", :level :error})
 
 user=> (v/validate-object employee {:email "test@google.com" :employeeId true :id "foo"})
-({:path "/email", :level :error, :message "Email must have example.com domain"} {:path "/employeeId", :level :error, :message "Expected a number but found boolean"} {:path "/id", :level :error, :message "Expected a number but found string"})
+({:kind :validation-failure, :message "Email must have example.com domain", :path "/email", :level :error} {:kind :type-mismatch, :message "Expected a number but found boolean", :path "/employeeId", :level :error} {:kind :type-mismatch, :message "Expected a number but found string", :path "/id", :level :error})
 
 user=> (v/validate-object employee {:email "test@example.com" :employeeId 10042 :id 42})
 ()
@@ -147,10 +147,11 @@ to check whether an object conforms to the schema.
 The validation logic is highly customizable. It accepts an options map with the below
 mentioned keys to tune the validation behavior.
 
-  - `:make-result` - a function that takes the path, message level, and a message and
-  returns a validation result as a vector. See `make-validation-result` for an example.
+  - `:make-result` - a function that takes the schema, the attribute value, the attribute
+  path, and a validation result and returns a validation result as a vector. See
+  `make-validation-result` for an example.
   - `:type-checks` - a map from type names to functions validating the conformance of a
-  value to those types. See `standard-type-checks` for an example.
+  value to those types. See `type-checks` for an example.
   - `:fail-on-unsupported-attributes?` - if true an error will be reported if the `obj`
   contains an attribute that is not defined in `schema`
 
