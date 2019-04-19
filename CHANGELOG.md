@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+## [0.2.0] — 2019-04-19
 ### Changed
 - Validations can return arbitrary data structures instead of only strings (#1)
 
@@ -18,4 +20,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 [0.1.0]: https://github.com/rkaippully/clj-annotations/compare/0.0.0...0.1.0
-[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.1.0...HEAD
+[0.2.0]: https://github.com/rkaippully/clj-annotations/compare/0.1.0...0.2.0
+[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.2.0...HEAD
