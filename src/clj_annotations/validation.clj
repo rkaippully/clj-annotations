@@ -76,7 +76,9 @@
       :validation-failure
       (concat
         (mapcat #(to-result :validation-failure :error %) (:errors args))
-        (mapcat #(to-result :validation-failure :warning %) (:warnings args))))))
+        (mapcat #(to-result :validation-failure :warning %) (:warnings args)))
+      ;; Unknown kind
+      [])))
 
 (def standard-opts
   "Standard options passed to `validate-object` if not overridden."
