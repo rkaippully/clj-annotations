@@ -136,8 +136,7 @@
    obj
    {:keys [make-result] :as opts}]
   (cond
-    (and required (= obj ::not-found))       (make-result schema obj path :missing-required-attribute nil)
-    (and (not required) (= obj ::not-found)) []
+    (and required (nil? obj))                (make-result schema obj path :missing-required-attribute nil)
     (and (not required) (nil? obj))          []
     multi-valued                             (validate-vector-attribute path schema obj opts)
     :else                                    (validate-scalar-attribute path schema obj opts)))
@@ -172,6 +171,6 @@
            unsupported-attrs (map name (cs/difference obj-attrs schema-attrs))]
        (if (and fail-on-unsupported-attributes? (seq unsupported-attrs))
          (mapcat #(make-result schema obj (conj path (name %)) :unsupported-attribute nil) unsupported-attrs)
-         (mapcat #(validate-attribute (conj path (name %)) (get attrs %) (get obj % ::not-found) opts) schema-attrs)))
+         (mapcat #(validate-attribute (conj path (name %)) (get attrs %) (get obj %) opts) schema-attrs)))
      (make-result schema obj path :non-map-value nil))))
 
