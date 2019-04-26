@@ -65,7 +65,9 @@
   :ne - string length must not be equal to the value of this key"
   [opts]
   (fn [s _]
-    (seq-length opts (if s (.length s) 0) "String length")))
+    (if (clj/or (nil? s) (string? s))
+      (seq-length opts (count s) "String length")
+      {:errors ["Value is not a string"]})))
 
 (defn coll-length
   "`(coll-length opts)` returns a condition to check if length of a collection matches
@@ -80,7 +82,13 @@
   :ne - collection length must not be equal to the value of this key"
   [opts]
   (fn [xs _]
-    (seq-length opts (count xs) "Collection length")))
+    (let [n (try
+              (count xs)
+              (catch UnsupportedOperationException _
+                nil))]
+      (if (some? n)
+        (seq-length opts n "Collection length")
+        {:errors ["Value is not a collection"]}))))
 
 (defn unique-attribute?
   "`(unique-attribute k)` returns a condition that takes a sequence of maps `ms` and ensure
@@ -97,6 +105,9 @@
   it matches the regular expression `re`"
   [re]
   (fn [s _]
-    (if (clj/and re s (re-matches re s))
+    (if (clj/and
+          (instance? java.util.regex.Pattern re)
+          (string? s)
+          (re-matches re s))
       {}
       {:errors [(str "Value must match the regular expression: " re)]})))

@@ -188,6 +188,8 @@
     (is (= {:errors ["String length should be greater than 0"]} ((sut/string-length {:gt 0}) nil nil))))
   (testing "empty string"
     (is (= {:errors ["String length should be greater than 0"]} ((sut/string-length {:gt 0}) "" nil))))
+  (testing "non-string"
+    (is (= {:errors ["Value is not a string"]} ((sut/string-length {:gt 0}) 42 nil))))
   (testing "lt"
     (is (= {:errors ["String length should be less than 3"]} ((sut/string-length {:lt 3}) "abc" nil))))
   (testing "le"
@@ -204,10 +206,12 @@
     (is (= {} ((sut/string-length {:ne 3}) "ab" nil)))))
 
 (deftest coll-length-test
-  (testing "nil array"
+  (testing "nil collection"
     (is (= {:errors ["Collection length should be greater than 0"]} ((sut/coll-length {:gt 0}) nil nil))))
-  (testing "empty array"
+  (testing "empty collection"
     (is (= {:errors ["Collection length should be greater than 0"]} ((sut/coll-length {:gt 0}) [] nil))))
+  (testing "non-collection"
+    (is (= {:errors ["Value is not a collection"]} ((sut/coll-length {:gt 0}) 42 nil))))
   (testing "lt"
     (is (= {:errors ["Collection length should be less than 3"]} ((sut/coll-length {:lt 3}) [1 2 3] nil))))
   (testing "le"
@@ -240,6 +244,8 @@
     (is (= {:errors ["Value must match the regular expression: "]} ((sut/regex-match? nil) "abc" nil))))
   (testing "nil string"
     (is (= {:errors ["Value must match the regular expression: \\d{4}-\\d{2}-\\d{2}"]} ((sut/regex-match? #"\d{4}-\d{2}-\d{2}") nil nil))))
+  (testing "non-string"
+    (is (= {:errors ["Value must match the regular expression: \\d{4}-\\d{2}-\\d{2}"]} ((sut/regex-match? #"\d{4}-\d{2}-\d{2}") 42 nil))))
   (testing "match success"
     (is (= {} ((sut/regex-match? #"\d{4}-\d{2}-\d{2}") "4444-22-22" nil))))
   (testing "match fail"
