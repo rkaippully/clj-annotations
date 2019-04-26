@@ -25,5 +25,5 @@
                   ["update-readme-version"]
                   ["vcs" "commit"]
                   ["vcs" "tag"]
-                  ["deploy"]
+                  ["deploy" "clojars"]
                   ["vcs" "push"]])
