@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
 ### Changed
 - Fix NPE in validation (#8)
+- Handle type mismatches in conditions (#7)
 
 ## [0.2.0] — 2019-04-19
 ### Changed
