@@ -137,7 +137,7 @@
             {:path    "/id"
              :level   :error
              :kind    :missing-required-attribute
-             :message "Missing required attribute"}] (sut/validate-object player {}))))
+             :message "Missing required attribute"}] (sut/validate-object player {:name nil}))))
 
   (testing "nil value for not required attribute"
     (is (= [] (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
