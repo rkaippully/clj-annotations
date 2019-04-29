@@ -14,9 +14,11 @@
              :clj08 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :clj09 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :clj10 {:dependencies [[org.clojure/clojure "1.10.0"]]}}
-  :deploy-repositories [["releases" {:url "https://clojars.org/repo"
+  :deploy-repositories [["releases" {:url   "https://clojars.org/repo"
                                      :creds :gpg}]]
-  :aliases {"update-readme-version" ["shell" "sed" "-i" "" "s/org.clojars.rkaippully\\\\/clj-annotations \"[0-9.]*\"/org.clojars.rkaippully\\\\/clj-annotations \"${:version}\"/" "README.md"]}
+  :aliases {"update-readme-version" ["shell" "sed" "-i" "" "s/org.clojars.rkaippully\\\\/clj-annotations \"[0-9.]*\"/org.clojars.rkaippully\\\\/clj-annotations \"${:version}\"/" "README.md"]
+            "release-deploy"        ["deploy" "releases"]
+            "release-push"          ["vcs" "push"]}
   :release-tasks [["kibit"]
                   ["vcs" "assert-committed"]
                   ["shell" "git" "diff" "--exit-code"]
@@ -25,6 +27,4 @@
                   ["changelog" "release"]
                   ["update-readme-version"]
                   ["vcs" "commit"]
-                  ["vcs" "tag"]
-                  ["deploy"]
-                  ["vcs" "push"]])
+                  ["vcs" "tag"]])
