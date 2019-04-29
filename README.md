@@ -4,7 +4,7 @@
 [![Clojars Project](https://img.shields.io/clojars/v/org.clojars.rkaippully/clj-annotations.svg)](https://clojars.org/org.clojars.rkaippully/clj-annotations)
 
 ```clj
-[org.clojars.rkaippully/clj-annotations "0.2.1"]
+[org.clojars.rkaippully/clj-annotations "0.2.2"]
 ```
 
 ## Motivation
