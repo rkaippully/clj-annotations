@@ -11,9 +11,11 @@
 
 (defn type-name
   "Returns the simple name of the class of `x`. For e.g., (type-name true) will return
-  \"boolean\"."
+  \"boolean\". (type-name nil) returns \"nil\"."
   [x]
-  (str/lower-case (.getSimpleName (class x))))
+  (if x
+    (str/lower-case (.getSimpleName (class x)))
+    "nil"))
 
 (defn valid-url?
   "Returns logical true if `s` is a valid URL string"
