@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Changed
+- Fix NPE in multi-valued attribute validation (#11)
 
 ## [0.2.2] — 2019-04-29
-
 ### Added
 - Automated release script
 
 ## [0.2.1] — 2019-04-26
-
 ### Changed
 - Fix NPE in validation (#8)
 - Handle type mismatches in conditions (#7)
