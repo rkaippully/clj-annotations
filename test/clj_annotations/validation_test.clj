@@ -205,4 +205,14 @@
                                        :level     "novice"}))))
 
   (testing "call make-result with invalid kind"
-    (is (= [] (sut/make-validation-result nil nil nil :blah nil)))))
+    (is (= [] (sut/make-validation-result nil nil nil :blah nil))))
+
+  (testing "nil values in multi-valued attributes"
+    (is (= [{:path    "/websites/0"
+             :level   :error
+             :kind    :non-map-value
+             :message "Expected a map but found nil"}]
+          (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                       :name      "Raghu"
+                                       :verified? true
+                                       :websites  [nil]})))))
