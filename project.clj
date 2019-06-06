@@ -1,4 +1,4 @@
-(defproject org.clojars.rkaippully/clj-annotations "0.2.2"
+(defproject org.clojars.rkaippully/clj-annotations "0.2.3"
   :description "A Clojure library designed to annotate values with arbitrary data."
   :url "https://github.com/rkaippully/clj-annotations"
   :license {:name "Mozilla Public License v2.0"

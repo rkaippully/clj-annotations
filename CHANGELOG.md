@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+## [0.2.3] — 2019-06-06
 ### Changed
 - Fix NPE in multi-valued attribute validation (#11)
 
@@ -34,4 +36,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.2.0]: https://github.com/rkaippully/clj-annotations/compare/0.1.0...0.2.0
 [0.2.1]: https://github.com/rkaippully/clj-annotations/compare/0.2.0...0.2.1
 [0.2.2]: https://github.com/rkaippully/clj-annotations/compare/0.2.1...0.2.2
-[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.2.2...HEAD
+[0.2.3]: https://github.com/rkaippully/clj-annotations/compare/0.2.2...0.2.3
+[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.2.3...HEAD
