@@ -31,7 +31,7 @@ The first step in using `clj-annotations` is to define a schema using the `defsc
 macro. For example, here is a schema defining a data structure describing a person.
 
 ``` clj
-user=> (require ['clj-annotations.core :as 'ann :refer ['defschema]])
+user=> (require '[clj-annotations.core :as ann :refer [defschema]])
 
 user=> (defn non-blank
          [s _]
@@ -88,8 +88,8 @@ property. For example, how do we find all attributes with `:type` property set t
 `:string`? Its possible to do that with `scan-attributes` function.
 
 ``` clj
-user=> (ann/scan-attributes person :type :string)
-(:email)
+user=> (ann/scan-attributes person :type #(= % :string))
+#{[:email]}
 ```
 
 ## Schema Composition
@@ -129,7 +129,7 @@ conflict in any properties, the last one in the sequence will win.
 get started with an example:
 
 ``` clj
-(require ['clj-annotations.validation :as 'v])
+(require '[clj-annotations.validation :as v])
 
 user=> (v/validate-object employee {})
 ({:kind :missing-required-attribute, :message "Missing required attribute", :path "/email", :level :error} {:kind :missing-required-attribute, :message "Missing required attribute", :path "/employeeId", :level :error} {:kind :missing-required-attribute, :message "Missing required attribute", :path "/id", :level :error})
