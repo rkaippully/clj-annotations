@@ -6,33 +6,52 @@
   attributes Each of the schemas and attributes can have arbitrary properties - key/value
   pairs - associated with them.
 
-  This namespace provides functions and macros to define and access annotations.")
+  This namespace provides functions and macros to define and access annotations."
+  (:require [clojure.set :as set]))
 
 
 ;;
 ;; Annotation accessor functions
 ;;
 
+(defn make-attr-path
+  [attr]
+  (as-> attr $attr
+    (if (sequential? $attr) $attr [$attr])
+    (interpose [:type :attributes] $attr)
+    (flatten $attr)
+    (concat [:attributes] $attr)))
+
 (defn get-annotations
   "Access the annotations associated with a schema, an attribute, and a property. Returns
   all properties if only `schema` and `attribute` are provided. Returns `nil` if the
-  specified property does not exist, or the `not-found` value if supplied."
+  specified property does not exist, or the `not-found` value if supplied. `attr` can be a
+  sequential which allows to access nested schema objects."
   ([schema]
    (:attributes schema))
   ([schema attr]
-   (get-in schema [:attributes attr]))
+   (get-in schema (make-attr-path attr)))
   ([schema attr prop]
-   (get-in schema [:attributes attr prop]))
+   (get-annotations schema attr prop nil))
   ([schema attr prop not-found]
-   (get-in schema [:attributes attr prop] not-found)))
+   (get-in schema (concat (make-attr-path attr) [prop]) not-found)))
 
 (defn scan-attributes
-  "Fetch a sequence of attribute ids of a schema having a specified property set to the
-  specified value."
-  [schema prop value]
-  (letfn [(prop-check [[attr props]]
-            (= (get props prop) value))]
-    (map first (filter prop-check (:attributes schema)))))
+  "Fetch a set of paths of a schema having a specified property satisfying predicate
+  `pred`. Each element of the set is a sequence of attribute ids."
+  [schema prop pred]
+  (letfn [(prop-check [path]
+            (fn [acc [attr props]]
+              (as-> acc $acc
+                (if (pred (get props prop))
+                  (conj $acc (conj path attr))
+                  $acc)
+                (if (= (type (:type props)) ::schema)
+                  (-> (prop-check (conj path attr))
+                      (reduce #{} (get-in props [:type :attributes]))
+                      (set/union $acc))
+                  $acc))))]
+    (reduce (prop-check []) #{} (:attributes schema))))
 
 
 ;;

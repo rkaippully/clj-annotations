@@ -14,6 +14,21 @@
    {:type     :string
     :validity :non-empty}})
 
+(sut/defschema company
+  :attributes
+  {:id   {:type :integer}
+   :name {:type :string}})
+
+(sut/defschema employee
+  :include    user
+  :attributes
+  {:id
+   {:type :string}
+   :employeeNumber
+   {:type :string}
+   :company
+   {:type company}})
+
 (deftest defschema-test
   (testing "the defschema macro"
     (is (= user {:name         "user"
@@ -34,14 +49,10 @@
 
 (deftest include-test
   (testing "include merges attribute maps"
-    (let [employee (sut/make-schema {:include    user
-                                     :attributes {:employeeNumber {:type :string}}})]
-      (is (= #{:id :name :employeeNumber} (set (keys (sut/get-annotations employee)))))))
+    (is (= #{:id :name :employeeNumber :company} (set (keys (sut/get-annotations employee))))))
 
   (testing "include overrides attributes"
-    (let [employee (sut/make-schema {:include    user
-                                     :attributes {:id {:type :string}}})]
-      (is (= :string (sut/get-annotations employee :id :type)))))
+    (is (= :string (sut/get-annotations employee :id :type))))
 
   (testing "include multiple schemas"
     (let [null-id  (sut/make-schema {:attributes {:id {:nullable true}}})
@@ -56,9 +67,7 @@
                          :validity :non-empty}}}))))
 
   (testing "make-schema removes :include"
-    (let [employee (sut/make-schema {:include    user
-                                     :attributes {:id {:type :string}}})]
-      (is (not (contains? employee :include))))))
+    (is (not (contains? employee :include)))))
 
 (deftest get-annotations-test
   (testing "all attributes"
@@ -68,10 +77,10 @@
   (testing "a specific property"
     (is (= :integer (sut/get-annotations user :id :type))))
   (testing "a specific property with not-found value"
-    (is (= :not-found (sut/get-annotations user :id :blah :not-found)))))
+    (is (= :not-found (sut/get-annotations user :id :blah :not-found))))
+  (testing "nested attributes"
+    (is (= :string (sut/get-annotations employee [:company :name] :type)))))
 
 (deftest scan-attributes-test
   (testing "scan-attributes"
-    (let [employee (sut/make-schema {:include    user
-                                     :attributes {:employeeNumber {:type :string}}})]
-      (is (= #{:name :employeeNumber} (set (sut/scan-attributes employee :type :string)))))))
+    (is (= #{[:id] [:name] [:employeeNumber] [:company :name]} (sut/scan-attributes employee :type #(= % :string))))))
