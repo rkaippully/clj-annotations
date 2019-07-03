@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+## [1.0.0] — 2019-07-03
 - scan-attributes should recursively check attributes (#13)
 
 ## [0.2.3] — 2019-06-06
@@ -38,4 +40,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.2.1]: https://github.com/rkaippully/clj-annotations/compare/0.2.0...0.2.1
 [0.2.2]: https://github.com/rkaippully/clj-annotations/compare/0.2.1...0.2.2
 [0.2.3]: https://github.com/rkaippully/clj-annotations/compare/0.2.2...0.2.3
-[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/0.2.3...HEAD
+[1.0.0]: https://github.com/rkaippully/clj-annotations/compare/0.2.3...1.0.0
+[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/1.0.0...HEAD
