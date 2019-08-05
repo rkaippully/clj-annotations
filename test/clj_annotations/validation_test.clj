@@ -1,7 +1,8 @@
 (ns clj-annotations.validation-test
   (:require [clojure.test :refer :all]
             [clj-annotations.core :refer [defschema]]
-            [clj-annotations.validation :as sut]))
+            [clj-annotations.validation :as sut]
+            [clj-annotations.conditions :as c]))
 
 (defn non-empty-string?
   [s _]
@@ -41,7 +42,8 @@
 
    :websites
    {:type         website
-    :multi-valued true}
+    :multi-valued true
+    :validity     (c/coll-length {:le 2})}
 
    :level
    {:type             :string
@@ -215,4 +217,20 @@
           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                        :name      "Raghu"
                                        :verified? true
-                                       :websites  [nil]})))))
+                                       :websites  [nil]}))))
+
+  (testing "validation of multi-valued attributes"
+    (is (= [{:path    "/websites"
+             :level   :error
+             :kind    :validation-failure
+             :message "Collection length should be less than or equal to 2"}
+            {:path    "/websites/2/location"
+             :level   :error
+             :kind    :type-mismatch
+             :message "Malformed URL"}]
+          (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                       :name      "Raghu"
+                                       :verified? true
+                                       :websites  [{:location "http://www.google.com"}
+                                                   {:location "http://www.github.com"}
+                                                   {:location ""}]})))))

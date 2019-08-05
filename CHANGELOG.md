@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+- Validity conditions do not work on multi-valued attributes (#15)
 
 ## [1.0.0] — 2019-07-03
 - scan-attributes should recursively check attributes (#13)
