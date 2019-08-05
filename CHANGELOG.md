@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+## [1.1.0] — 2019-08-05
 - Validity conditions do not work on multi-valued attributes (#15)
 
 ## [1.0.0] — 2019-07-03
@@ -42,4 +44,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.2.2]: https://github.com/rkaippully/clj-annotations/compare/0.2.1...0.2.2
 [0.2.3]: https://github.com/rkaippully/clj-annotations/compare/0.2.2...0.2.3
 [1.0.0]: https://github.com/rkaippully/clj-annotations/compare/0.2.3...1.0.0
-[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/1.0.0...HEAD
+[1.1.0]: https://github.com/rkaippully/clj-annotations/compare/1.0.0...1.1.0
+[Unreleased]: https://github.com/rkaippully/clj-annotations/compare/1.1.0...HEAD
