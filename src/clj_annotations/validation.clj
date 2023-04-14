@@ -108,8 +108,12 @@
                             (f schema obj))]
     (cond
       ;; Type checks
-      (and (= (type typ) ::core/schema))
-      (validate-object path typ obj opts)
+      (= (type typ) ::core/schema)
+      (let [obj-result (validate-object path typ obj opts)]
+        ;; if there were no errors in the object, check the validity condition
+        (if (not-any? #(= (:level %) :error) obj-result)
+          (concat obj-result (eval-validity-condition path schema obj opts))
+          obj-result))
 
       (and (contains? type-checks typ) type-check-result)
       (make-result schema obj path :type-mismatch type-check-result)

@@ -10,6 +10,11 @@
     (= s "")                  {:errors ["Value is empty"]}
     (clojure.string/blank? s) {:warnings ["Value is blank"]}))
 
+(defn contender?
+  [player _]
+  (when-not (:verified? player)
+    {:errors ["Contenders must be verified"]}))
+
 (defschema website
   :attributes
   {:title
@@ -56,6 +61,16 @@
 
    :unicorn
    {:type :magic}})
+
+(defschema championship
+  :attributes
+  {:player1
+   {:type     player
+    :validity contender?}
+
+   :player2
+   {:type     player
+    :validity contender?}})
 
 (deftest type-check-tests
   (testing "non-map for object"
@@ -234,3 +249,32 @@
                                        :websites  [{:location "http://www.google.com"}
                                                    {:location "http://www.github.com"}
                                                    {:location ""}]})))))
+
+  (testing "validation of schema object attributes"
+    (let [id "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+          good-contender {:id id :name "Raghu" :level "master" :verified? true}
+          bad-contender {:id id :name "Raghu" :level "master" :verified? false}
+          error-player {:id id :name "Raghu" :level "master"}
+          warning-player1 {:id id :name " " :level "master" :verified? false}
+          warning-player2 {:id id :name " " :level "master" :verified? true}]
+      ;; all checks pass
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 good-contender})
+             []))
+      ;; contender check fails
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 bad-contender})
+             [{:path "/player2" :level :error :kind :validation-failure
+               :message "Contenders must be verified"}]))
+      ;; contender check is not run if the player has errors
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 error-player})
+             [{:path "/player2/verified?" :level :error :kind :missing-required-attribute
+               :message "Missing required attribute"}]))
+      ;; contender check is run if the player has warnings
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 warning-player1})
+             [{:path "/player2/name" :level :warning :kind :validation-failure
+               :message "Value is blank"}
+              {:path "/player2" :level :error :kind :validation-failure
+               :message "Contenders must be verified"}]))
+      ;; player warnings are still reported if the contender check passes
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 warning-player2})
+             [{:path "/player2/name" :level :warning :kind :validation-failure
+               :message "Value is blank"}]))))
