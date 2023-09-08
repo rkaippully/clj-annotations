@@ -108,8 +108,14 @@
                             (f schema obj))]
     (cond
       ;; Type checks
-      (and (= (type typ) ::core/schema))
-      (validate-object path typ obj opts)
+      (= (type typ) ::core/schema)
+      (let [obj-result (validate-object path typ obj opts)]
+        ;; if there were no errors in the object, check the validity condition,
+        ;; unless it was already checked at the vector level
+        (if (and (not (:multi-valued schema))
+                 (not-any? #(= (:level %) :error) obj-result))
+          (concat obj-result (eval-validity-condition path schema obj opts))
+          obj-result))
 
       (and (contains? type-checks typ) type-check-result)
       (make-result schema obj path :type-mismatch type-check-result)
@@ -121,17 +127,21 @@
       (and canon-vals (not-any? (set canon-vals) [obj]))
       (make-result schema obj path :canonical-value-mismatch nil)
 
+      (:multi-valued schema)
+      [] ; already checked at the vector level
+
       :else
       (eval-validity-condition path schema obj opts))))
 
 (defn- validate-vector-attribute
   [path schema obj {:keys [make-result validation-fns] :as opts}]
   (if (sequential? obj)
-    (let [vec-result (eval-validity-condition path schema obj opts)
-          validate   (fn [i v]
-                       (validate-scalar-attribute (conj path i) schema v opts))
-          elem-results (apply concat (map-indexed validate obj))]
-      (concat vec-result elem-results))
+    (let [validate (fn [i v]
+                     (validate-scalar-attribute (conj path i) schema v opts))
+          elem-results (apply concat (map-indexed validate obj))
+          vec-result (when (empty? elem-results)
+                       (eval-validity-condition path schema obj opts))]
+      (concat elem-results vec-result))
     (make-result schema obj path :non-array-value nil)))
 
 (defn- validate-attribute

@@ -10,6 +10,16 @@
     (= s "")                  {:errors ["Value is empty"]}
     (clojure.string/blank? s) {:warnings ["Value is blank"]}))
 
+(defn unique-values?
+  [xs _]
+  (when-not (apply distinct? xs)
+    {:errors ["Duplicate values"]}))
+
+(defn contender?
+  [player _]
+  (when-not (:verified? player)
+    {:errors ["Contenders must be verified"]}))
+
 (defschema website
   :attributes
   {:title
@@ -40,10 +50,16 @@
    :date-verified
    {:type :date}
 
+   :emails
+   {:type :string
+    :multi-valued true
+    :validity unique-values?}
+
    :websites
    {:type         website
     :multi-valued true
-    :validity     (c/coll-length {:le 2})}
+    :validity     (c/and (c/coll-length {:le 2})
+                         (c/unique-attribute? :location))}
 
    :level
    {:type             :string
@@ -57,6 +73,16 @@
    :unicorn
    {:type :magic}})
 
+(defschema championship
+  :attributes
+  {:player1
+   {:type     player
+    :validity contender?}
+
+   :player2
+   {:type     player
+    :validity contender?}})
+
 (deftest type-check-tests
   (testing "non-map for object"
     (is (= [{:path    ""
@@ -68,7 +94,7 @@
     (is (= [] (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                            :name      "Raghu"
                                            :verified? true
-                                           :websites  [{:location "http://www.google.com"}]}))))
+                                           :websites  [{:title "Google" :location "http://www.google.com"}]}))))
 
   (testing "non-array for vector"
     (is (= [{:path    "/websites"
@@ -219,18 +245,78 @@
                                        :verified? true
                                        :websites  [nil]}))))
 
-  (testing "validation of multi-valued attributes"
-    (is (= [{:path    "/websites"
-             :level   :error
-             :kind    :validation-failure
-             :message "Collection length should be less than or equal to 2"}
-            {:path    "/websites/2/location"
+  (testing "validation of simple multi-valued attributes"
+    (let [base-player {:id "c2a5080c-d09b-49c7-baa9-38602235c9c5" :name "Raghu" :verified? true}
+          good-emails ["foo@bar.baz" "abc@def.ghi" "coolguy@test.com"]
+          bad-emails ["foo@bar.baz" "abc@def.ghi" "foo@bar.baz"]]
+      (is (= []
+             (sut/validate-object player (assoc base-player :emails good-emails))))
+      (is (= [{:path    "/emails"
+               :level   :error
+               :kind    :validation-failure
+               :message "Duplicate values"}]
+             (sut/validate-object player (assoc base-player :emails bad-emails))))))
+
+  (testing "multi-valued validity is not checked unless all elements are valid"
+    (is (= [{:path    "/websites/2/location"
              :level   :error
              :kind    :type-mismatch
              :message "Malformed URL"}]
-          (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
-                                       :name      "Raghu"
-                                       :verified? true
-                                       :websites  [{:location "http://www.google.com"}
-                                                   {:location "http://www.github.com"}
-                                                   {:location ""}]})))))
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.github.com"}
+                                                    {:location ""}]}))))
+
+  (testing "multi-valued validity is checked if all elements are valid"
+    (is (= [{:path    "/websites"
+             :level   :error
+             :kind    :validation-failure
+             :message "Collection length should be less than or equal to 2"}]
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.github.com"}
+                                                    {:location "http://www.clojure.org"}]}))))
+
+  (testing "uniqueness on multi-valued attributes"
+    (is (= [{:path    "/websites"
+             :level   :error
+             :kind    :validation-failure
+             :message "Duplicate values for the attribute :location"}]
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.google.com"}]}))))
+
+  (testing "validation of schema object attributes"
+    (let [id "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+          good-contender {:id id :name "Raghu" :level "master" :verified? true}
+          bad-contender {:id id :name "Raghu" :level "master" :verified? false}
+          error-player {:id id :name "Raghu" :level "master"}
+          warning-player1 {:id id :name " " :level "master" :verified? false}
+          warning-player2 {:id id :name " " :level "master" :verified? true}]
+      ;; all checks pass
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 good-contender})
+             []))
+      ;; contender check fails
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 bad-contender})
+             [{:path "/player2" :level :error :kind :validation-failure
+               :message "Contenders must be verified"}]))
+      ;; contender check is not run if the player has errors
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 error-player})
+             [{:path "/player2/verified?" :level :error :kind :missing-required-attribute
+               :message "Missing required attribute"}]))
+      ;; contender check is run if the player has warnings
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 warning-player1})
+             [{:path "/player2/name" :level :warning :kind :validation-failure
+               :message "Value is blank"}
+              {:path "/player2" :level :error :kind :validation-failure
+               :message "Contenders must be verified"}]))
+      ;; player warnings are still reported if the contender check passes
+      (is (= (sut/validate-object championship {:player1 good-contender :player2 warning-player2})
+             [{:path "/player2/name" :level :warning :kind :validation-failure
+               :message "Value is blank"}])))))
