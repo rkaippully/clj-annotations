@@ -136,11 +136,12 @@
 (defn- validate-vector-attribute
   [path schema obj {:keys [make-result validation-fns] :as opts}]
   (if (sequential? obj)
-    (let [vec-result (eval-validity-condition path schema obj opts)
-          validate   (fn [i v]
-                       (validate-scalar-attribute (conj path i) schema v opts))
-          elem-results (apply concat (map-indexed validate obj))]
-      (concat vec-result elem-results))
+    (let [validate (fn [i v]
+                     (validate-scalar-attribute (conj path i) schema v opts))
+          elem-results (apply concat (map-indexed validate obj))
+          vec-result (when (empty? elem-results)
+                       (eval-validity-condition path schema obj opts))]
+      (concat elem-results vec-result))
     (make-result schema obj path :non-array-value nil)))
 
 (defn- validate-attribute

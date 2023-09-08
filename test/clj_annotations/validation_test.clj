@@ -257,21 +257,29 @@
                :message "Duplicate values"}]
              (sut/validate-object player (assoc base-player :emails bad-emails))))))
 
-  (testing "validation of complex multi-valued attributes"
-    (is (= [{:path    "/websites"
-             :level   :error
-             :kind    :validation-failure
-             :message "Collection length should be less than or equal to 2"}
-            {:path    "/websites/2/location"
+  (testing "multi-valued validity is not checked unless all elements are valid"
+    (is (= [{:path    "/websites/2/location"
              :level   :error
              :kind    :type-mismatch
              :message "Malformed URL"}]
-          (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
-                                       :name      "Raghu"
-                                       :verified? true
-                                       :websites  [{:location "http://www.google.com"}
-                                                   {:location "http://www.github.com"}
-                                                   {:location ""}]}))))
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.github.com"}
+                                                    {:location ""}]}))))
+
+  (testing "multi-valued validity is checked if all elements are valid"
+    (is (= [{:path    "/websites"
+             :level   :error
+             :kind    :validation-failure
+             :message "Collection length should be less than or equal to 2"}]
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.github.com"}
+                                                    {:location "http://www.clojure.org"}]}))))
 
   (testing "uniqueness on multi-valued attributes"
     (is (= [{:path    "/websites"
