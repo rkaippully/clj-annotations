@@ -110,8 +110,10 @@
       ;; Type checks
       (= (type typ) ::core/schema)
       (let [obj-result (validate-object path typ obj opts)]
-        ;; if there were no errors in the object, check the validity condition
-        (if (not-any? #(= (:level %) :error) obj-result)
+        ;; if there were no errors in the object, check the validity condition,
+        ;; unless it was already checked at the vector level
+        (if (and (not (:multi-valued schema))
+                 (not-any? #(= (:level %) :error) obj-result))
           (concat obj-result (eval-validity-condition path schema obj opts))
           obj-result))
 
@@ -124,6 +126,9 @@
       ;; Validation
       (and canon-vals (not-any? (set canon-vals) [obj]))
       (make-result schema obj path :canonical-value-mismatch nil)
+
+      (:multi-valued schema)
+      [] ; already checked at the vector level
 
       :else
       (eval-validity-condition path schema obj opts))))

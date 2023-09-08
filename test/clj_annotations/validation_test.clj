@@ -10,6 +10,11 @@
     (= s "")                  {:errors ["Value is empty"]}
     (clojure.string/blank? s) {:warnings ["Value is blank"]}))
 
+(defn unique-values?
+  [xs _]
+  (when-not (apply distinct? xs)
+    {:errors ["Duplicate values"]}))
+
 (defn contender?
   [player _]
   (when-not (:verified? player)
@@ -45,10 +50,16 @@
    :date-verified
    {:type :date}
 
+   :emails
+   {:type :string
+    :multi-valued true
+    :validity unique-values?}
+
    :websites
    {:type         website
     :multi-valued true
-    :validity     (c/coll-length {:le 2})}
+    :validity     (c/and (c/coll-length {:le 2})
+                         (c/unique-attribute? :location))}
 
    :level
    {:type             :string
@@ -83,7 +94,7 @@
     (is (= [] (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
                                            :name      "Raghu"
                                            :verified? true
-                                           :websites  [{:location "http://www.google.com"}]}))))
+                                           :websites  [{:title "Google" :location "http://www.google.com"}]}))))
 
   (testing "non-array for vector"
     (is (= [{:path    "/websites"
@@ -234,7 +245,19 @@
                                        :verified? true
                                        :websites  [nil]}))))
 
-  (testing "validation of multi-valued attributes"
+  (testing "validation of simple multi-valued attributes"
+    (let [base-player {:id "c2a5080c-d09b-49c7-baa9-38602235c9c5" :name "Raghu" :verified? true}
+          good-emails ["foo@bar.baz" "abc@def.ghi" "coolguy@test.com"]
+          bad-emails ["foo@bar.baz" "abc@def.ghi" "foo@bar.baz"]]
+      (is (= []
+             (sut/validate-object player (assoc base-player :emails good-emails))))
+      (is (= [{:path    "/emails"
+               :level   :error
+               :kind    :validation-failure
+               :message "Duplicate values"}]
+             (sut/validate-object player (assoc base-player :emails bad-emails))))))
+
+  (testing "validation of complex multi-valued attributes"
     (is (= [{:path    "/websites"
              :level   :error
              :kind    :validation-failure
@@ -248,7 +271,18 @@
                                        :verified? true
                                        :websites  [{:location "http://www.google.com"}
                                                    {:location "http://www.github.com"}
-                                                   {:location ""}]})))))
+                                                   {:location ""}]}))))
+
+  (testing "uniqueness on multi-valued attributes"
+    (is (= [{:path    "/websites"
+             :level   :error
+             :kind    :validation-failure
+             :message "Duplicate values for the attribute :location"}]
+           (sut/validate-object player {:id        "c2a5080c-d09b-49c7-baa9-38602235c9c5"
+                                        :name      "Raghu"
+                                        :verified? true
+                                        :websites  [{:location "http://www.google.com"}
+                                                    {:location "http://www.google.com"}]}))))
 
   (testing "validation of schema object attributes"
     (let [id "c2a5080c-d09b-49c7-baa9-38602235c9c5"
@@ -277,4 +311,4 @@
       ;; player warnings are still reported if the contender check passes
       (is (= (sut/validate-object championship {:player1 good-contender :player2 warning-player2})
              [{:path "/player2/name" :level :warning :kind :validation-failure
-               :message "Value is blank"}]))))
+               :message "Value is blank"}])))))
